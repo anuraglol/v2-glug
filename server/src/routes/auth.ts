@@ -30,7 +30,6 @@ auth.get("/google", (c) => {
 
   setTimeout(() => stateStore.delete(state), 5 * 60 * 1000)
 
-  // Build config using c.env
   const oauthConfig: GoogleOAuthConfig = {
     clientId: c.env.GOOGLE_CLIENT_ID,
     clientSecret: c.env.GOOGLE_CLIENT_SECRET,
@@ -58,7 +57,6 @@ auth.get("/google/callback", async (c) => {
   stateStore.delete(state)
 
   try {
-    // Build config using c.env
     const oauthConfig: GoogleOAuthConfig = {
       clientId: c.env.GOOGLE_CLIENT_ID,
       clientSecret: c.env.GOOGLE_CLIENT_SECRET,
@@ -95,30 +93,33 @@ auth.get("/google/callback", async (c) => {
     const refreshToken = generateRefreshToken()
     const csrfToken = generateCSRFToken()
 
-    await storeRefreshToken(user.id, refreshToken)
+    await storeRefreshToken(user.id, refreshToken, db)
 
     setCookie(c, "access_token", accessToken, {
       httpOnly: false,
       secure,
-      sameSite: "Strict",
+      sameSite: "Lax", // Changed from "Strict"
       maxAge: 15 * 60,
       path: "/",
+      domain: "localhost",
     })
 
     setCookie(c, "refresh_token", refreshToken, {
       httpOnly: true,
       secure,
-      sameSite: "Strict",
+      sameSite: "Lax", // Changed from "Strict"
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
+      domain: "localhost",
     })
 
     setCookie(c, "csrf_token", csrfToken, {
       httpOnly: false,
       secure,
-      sameSite: "Strict",
+      sameSite: "Lax", // Changed from "Strict"
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
+      domain: "localhost",
     })
 
     return c.redirect(`${c.env.FRONTEND_URL}/dashboard`)
@@ -137,7 +138,7 @@ auth.post("/refresh", async (c) => {
     return c.json({ error: "No refresh token" }, 401)
   }
 
-  const tokenData = await validateRefreshToken(refreshToken)
+  const tokenData = await validateRefreshToken(refreshToken, db)
 
   if (!tokenData) {
     return c.json({ error: "Invalid refresh token" }, 401)
@@ -156,12 +157,13 @@ auth.post("/refresh", async (c) => {
   }
 
   const newAccessToken = await generateAccessToken(payload, c.env)
-  const newRefreshToken = await rotateRefreshToken(refreshToken, user.id)
+  const newRefreshToken = await rotateRefreshToken(refreshToken, user.id, db)
 
   setCookie(c, "access_token", newAccessToken, {
     httpOnly: false,
     secure,
-    sameSite: "Strict",
+    sameSite: "Lax",
+    domain: "localhost",
     maxAge: 15 * 60,
     path: "/",
   })
@@ -169,7 +171,8 @@ auth.post("/refresh", async (c) => {
   setCookie(c, "refresh_token", newRefreshToken, {
     httpOnly: true,
     secure,
-    sameSite: "Strict",
+    sameSite: "Lax",
+    domain: "localhost",
     maxAge: 7 * 24 * 60 * 60,
     path: "/",
   })
@@ -179,9 +182,10 @@ auth.post("/refresh", async (c) => {
 
 auth.post("/logout", async (c) => {
   const refreshToken = getCookie(c, "refresh_token")
+  const db = c.get("db")
 
   if (refreshToken) {
-    await deleteRefreshToken(refreshToken)
+    await deleteRefreshToken(refreshToken, db)
   }
 
   deleteCookie(c, "access_token")

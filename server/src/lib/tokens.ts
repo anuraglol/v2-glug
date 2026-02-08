@@ -1,15 +1,16 @@
-import { randomBytes } from "crypto"
-import { db } from "./db"
 import { refreshTokens } from "./db/schema"
 import { eq, and, gt } from "drizzle-orm"
+import { DB } from "./db"
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 
 export function generateRefreshToken(): string {
-  return randomBytes(32).toString("hex")
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
 }
 
-export async function storeRefreshToken(userId: string, token: string) {
+export async function storeRefreshToken(userId: string, token: string, db: DB) {
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS)
 
@@ -20,7 +21,7 @@ export async function storeRefreshToken(userId: string, token: string) {
   })
 }
 
-export async function validateRefreshToken(token: string) {
+export async function validateRefreshToken(token: string, db: DB) {
   const [result] = await db
     .select()
     .from(refreshTokens)
@@ -30,17 +31,21 @@ export async function validateRefreshToken(token: string) {
   return result || null
 }
 
-export async function deleteRefreshToken(token: string) {
+export async function deleteRefreshToken(token: string, db: DB) {
   await db.delete(refreshTokens).where(eq(refreshTokens.token, token))
 }
 
-export async function deleteAllUserRefreshTokens(userId: string) {
+export async function deleteAllUserRefreshTokens(userId: string, db: DB) {
   await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId))
 }
 
-export async function rotateRefreshToken(oldToken: string, userId: string): Promise<string> {
-  await deleteRefreshToken(oldToken)
+export async function rotateRefreshToken(
+  oldToken: string,
+  userId: string,
+  db: DB,
+): Promise<string> {
+  await deleteRefreshToken(oldToken, db)
   const newToken = generateRefreshToken()
-  await storeRefreshToken(userId, newToken)
+  await storeRefreshToken(userId, newToken, db)
   return newToken
 }

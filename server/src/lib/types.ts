@@ -1,4 +1,5 @@
 import { DB } from "./db"
+import { User } from "./db/schema"
 
 export type EnvBindings = {
   DATABASE_URL: string
@@ -15,5 +16,6 @@ export type HonoParams = {
   Bindings: EnvBindings
   Variables: {
     db: DB
+    user: User
   }
 }

@@ -7,6 +7,7 @@ export interface GoogleOAuthConfig {
 }
 
 export function getGoogleOAuthURL(state: string, config: GoogleOAuthConfig): string {
+  console.log(config)
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: config.redirectUri,

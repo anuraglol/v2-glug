@@ -1,6 +1,6 @@
 {
-  "id": "d67ee0bc-7a8f-46ee-a615-8821344f12bf",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "8b9378ea-224a-405f-a10b-a6c8f29e3361",
+  "prevId": "d67ee0bc-7a8f-46ee-a615-8821344f12bf",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -37,12 +37,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "quiz_attempts_user_id_users_id_fk": {
-          "name": "quiz_attempts_user_id_users_id_fk",
+        "quiz_attempts_user_id_users_google_id_fk": {
+          "name": "quiz_attempts_user_id_users_google_id_fk",
           "tableFrom": "quiz_attempts",
           "tableTo": "users",
           "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsTo": ["google_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

@@ -5,6 +5,7 @@ import { logger } from "hono/logger"
 import { cors } from "hono/cors"
 import { HonoParams } from "./lib/types"
 import { dbMiddleware } from "./middleware/db"
+import auth from "./routes/auth"
 
 const app = new Hono<HonoParams>()
 
@@ -27,6 +28,7 @@ app.get("/", (c) => {
   return c.text("Hello Hono!")
 })
 
+app.route("/auth", auth)
 app.route("/quiz", quiz)
 app.route("/admin", admin)
 

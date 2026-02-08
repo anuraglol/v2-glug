@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { authMiddleware, getUser } from "../middleware/auth"
-import { quizAttempts, quizQuestions } from "../lib/db/schema"
+import { quizAttempts, quizQuestions, users } from "../lib/db/schema"
 import { eq } from "drizzle-orm"
 import { HonoParams } from "../lib/types"
 
@@ -26,7 +26,7 @@ quiz.get("/questions", async (c) => {
 })
 
 quiz.get("/attempt", async (c) => {
-  const user = getUser(c)
+  const user = await getUser(c)
   const db = c.get("db")
 
   const attempt = await db
@@ -36,6 +36,7 @@ quiz.get("/attempt", async (c) => {
     })
     .from(quizAttempts)
     .where(eq(quizAttempts.userId, user.userId))
+    .limit(1)
 
   if (!attempt) {
     return c.json({ error: "No quiz attempt found" }, 404)
@@ -45,25 +46,42 @@ quiz.get("/attempt", async (c) => {
 })
 
 quiz.post("/submit", async (c) => {
-  const user = getUser(c)
+  const user = await getUser(c)
   const { answers } = await c.req.json()
   const db = c.get("db")
 
-  const questions = await db.select().from(quizQuestions).limit(10)
-  let score = 0
+  const [existingAttempt] = await db
+    .select()
+    .from(quizAttempts)
+    .where(eq(quizAttempts.userId, user.userId))
+    .limit(1)
 
+  if (existingAttempt) {
+    return c.json({ error: "Quiz already taken" }, 403)
+  }
+
+  const questions = await db.select().from(quizQuestions).limit(10)
+
+  if (!Array.isArray(answers) || answers.length !== 10) {
+    return c.json({ error: "Invalid answers format" }, 400)
+  }
+
+  let score = 0
   for (let i = 0; i < questions.length; i++) {
     if (answers[i] === questions[i].correctAnswer) {
       score++
     }
   }
 
-  await db.insert(quizAttempts).values({
-    userId: user.userId,
-    score,
-  })
+  const [attempt] = await db
+    .insert(quizAttempts)
+    .values({
+      userId: user.userId,
+      score,
+    })
+    .returning()
 
-  return c.json({ score })
+  return c.json({ score, attempt })
 })
 
 export default quiz
