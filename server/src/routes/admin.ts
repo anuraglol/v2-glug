@@ -26,6 +26,7 @@ admin.get("/attempts", async (c) => {
       submittedAt: quizAttempts.submittedAt,
     })
     .from(quizAttempts)
+    .leftJoin(users, eq(quizAttempts.userId, users.id))
 
   console.log("Fetched attempts:", attempts)
 

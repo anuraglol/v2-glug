@@ -98,7 +98,7 @@ auth.get("/google/callback", async (c) => {
     setCookie(c, "access_token", accessToken, {
       httpOnly: false,
       secure,
-      sameSite: "Lax", // Changed from "Strict"
+      sameSite: "Lax",
       maxAge: 15 * 60,
       path: "/",
       domain: "localhost",
@@ -107,7 +107,7 @@ auth.get("/google/callback", async (c) => {
     setCookie(c, "refresh_token", refreshToken, {
       httpOnly: true,
       secure,
-      sameSite: "Lax", // Changed from "Strict"
+      sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
       domain: "localhost",
@@ -116,7 +116,7 @@ auth.get("/google/callback", async (c) => {
     setCookie(c, "csrf_token", csrfToken, {
       httpOnly: false,
       secure,
-      sameSite: "Lax", // Changed from "Strict"
+      sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
       domain: "localhost",
