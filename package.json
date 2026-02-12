@@ -7,6 +7,7 @@
   },
   "private": true,
   "scripts": {
+    "dev": "bun run dev:client & bun run dev:server",
     "dev:client": "bun --cwd client dev",
     "dev:server": "bun --cwd server dev",
     "build:client": "bun --cwd client build",
@@ -17,5 +18,8 @@
     "check": "bun run lint && bun run fmt:check"
   },
   "type": "module",
-  "workspaces": ["client", "server"]
+  "workspaces": [
+    "client",
+    "server"
+  ]
 }
